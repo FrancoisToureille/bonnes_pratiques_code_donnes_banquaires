@@ -1,0 +1,554 @@
+openapi: 3.0.3
+info:
+  title: API Bancaire
+  description: API REST pour la gestion des entreprises et comptes bancaires
+  version: 1.0.0
+  contact:
+    name: Support API
+    email: support@api-bancaire.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Serveur de développement
+
+tags:
+  - name: Entreprises
+    description: Gestion des entreprises
+  - name: Comptes Bancaires
+    description: Gestion des comptes bancaires
+
+paths:
+  /entreprises:
+    get:
+      tags:
+        - Entreprises
+      summary: Liste toutes les entreprises
+      operationId: getEntreprises
+      responses:
+        '200':
+          description: Liste des entreprises
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entreprise'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      tags:
+        - Entreprises
+      summary: Crée une nouvelle entreprise
+      operationId: createEntreprise
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntrepriseCreate'
+      responses:
+        '201':
+          description: Entreprise créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entreprise'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /entreprises/{id}:
+    get:
+      tags:
+        - Entreprises
+      summary: Récupère une entreprise par ID
+      operationId: getEntrepriseById
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Détails de l'entreprise
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entreprise'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      tags:
+        - Entreprises
+      summary: Met à jour une entreprise
+      operationId: updateEntreprise
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntrepriseUpdate'
+      responses:
+        '200':
+          description: Entreprise mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entreprise'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      tags:
+        - Entreprises
+      summary: Supprime une entreprise
+      operationId: deleteEntreprise
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Entreprise supprimée avec succès
+        '400':
+          description: Impossible de supprimer l'entreprise (comptes associés)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: CANNOT_DELETE_ENTREPRISE_WITH_COMPTES
+                message: Impossible de supprimer l'entreprise car elle possède des comptes bancaires
+                timestamp: "2026-01-12T10:30:00Z"
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /entreprises/{id}/avec-comptes:
+    get:
+      tags:
+        - Entreprises
+      summary: Récupère une entreprise avec ses comptes bancaires (agrégat)
+      operationId: getEntrepriseWithComptes
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Entreprise avec ses comptes bancaires
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntrepriseAvecComptes'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /comptes:
+    get:
+      tags:
+        - Comptes Bancaires
+      summary: Liste tous les comptes bancaires
+      operationId: getComptes
+      parameters:
+        - name: entrepriseId
+          in: query
+          description: Filtrer par ID d'entreprise
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Liste des comptes bancaires
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompteBancaire'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      tags:
+        - Comptes Bancaires
+      summary: Crée un nouveau compte bancaire
+      operationId: createCompte
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompteBancaireCreate'
+      responses:
+        '201':
+          description: Compte bancaire créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompteBancaire'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /comptes/{id}:
+    get:
+      tags:
+        - Comptes Bancaires
+      summary: Récupère un compte bancaire par ID
+      operationId: getCompteById
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Détails du compte bancaire
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompteBancaire'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      tags:
+        - Comptes Bancaires
+      summary: Met à jour un compte bancaire
+      operationId: updateCompte
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompteBancaireUpdate'
+      responses:
+        '200':
+          description: Compte bancaire mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompteBancaire'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      tags:
+        - Comptes Bancaires
+      summary: Supprime un compte bancaire
+      operationId: deleteCompte
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Compte bancaire supprimé avec succès
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      description: Identifiant unique de la ressource
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+
+  schemas:
+    Entreprise:
+      type: object
+      required:
+        - id
+        - nom
+        - siret
+        - adresse
+        - dateCreation
+      properties:
+        id:
+          type: integer
+          description: Identifiant unique
+          example: 1
+        nom:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Nom de l'entreprise
+          example: "Tech Solutions SARL"
+        siret:
+          type: string
+          pattern: '^\d{14}$'
+          description: Numéro SIRET (14 chiffres)
+          example: "12345678901234"
+        adresse:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Adresse complète
+          example: "123 rue de la République, 75001 Paris"
+        dateCreation:
+          type: string
+          format: date-time
+          description: Date de création dans le système
+          example: "2026-01-12T10:30:00Z"
+
+    EntrepriseCreate:
+      type: object
+      required:
+        - nom
+        - siret
+        - adresse
+      properties:
+        nom:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: "Tech Solutions SARL"
+        siret:
+          type: string
+          pattern: '^\d{14}$'
+          example: "12345678901234"
+        adresse:
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: "123 rue de la République, 75001 Paris"
+
+    EntrepriseUpdate:
+      type: object
+      properties:
+        nom:
+          type: string
+          minLength: 1
+          maxLength: 200
+        siret:
+          type: string
+          pattern: '^\d{14}$'
+        adresse:
+          type: string
+          minLength: 1
+          maxLength: 500
+
+    CompteBancaire:
+      type: object
+      required:
+        - id
+        - numeroCompte
+        - solde
+        - devise
+        - type
+        - entrepriseId
+        - dateOuverture
+      properties:
+        id:
+          type: integer
+          description: Identifiant unique
+          example: 1
+        numeroCompte:
+          type: string
+          pattern: '^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$'
+          description: Numéro de compte au format IBAN
+          example: "FR7612345678901234567890123"
+        solde:
+          type: number
+          format: double
+          description: Solde du compte
+          example: 15000.50
+        devise:
+          type: string
+          enum: [EUR, USD, GBP, CHF]
+          description: Devise du compte
+          example: "EUR"
+        type:
+          type: string
+          enum: [COURANT, EPARGNE, PROFESSIONNEL]
+          description: Type de compte
+          example: "PROFESSIONNEL"
+        entrepriseId:
+          type: integer
+          description: ID de l'entreprise propriétaire
+          example: 1
+        dateOuverture:
+          type: string
+          format: date-time
+          description: Date d'ouverture du compte
+          example: "2026-01-12T10:30:00Z"
+
+    CompteBancaireCreate:
+      type: object
+      required:
+        - numeroCompte
+        - solde
+        - devise
+        - type
+        - entrepriseId
+      properties:
+        numeroCompte:
+          type: string
+          pattern: '^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$'
+          example: "FR7612345678901234567890123"
+        solde:
+          type: number
+          format: double
+          example: 15000.50
+        devise:
+          type: string
+          enum: [EUR, USD, GBP, CHF]
+          example: "EUR"
+        type:
+          type: string
+          enum: [COURANT, EPARGNE, PROFESSIONNEL]
+          example: "PROFESSIONNEL"
+        entrepriseId:
+          type: integer
+          example: 1
+
+    CompteBancaireUpdate:
+      type: object
+      properties:
+        numeroCompte:
+          type: string
+          pattern: '^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$'
+        solde:
+          type: number
+          format: double
+        devise:
+          type: string
+          enum: [EUR, USD, GBP, CHF]
+        type:
+          type: string
+          enum: [COURANT, EPARGNE, PROFESSIONNEL]
+
+    EntrepriseAvecComptes:
+      allOf:
+        - $ref: '#/components/schemas/Entreprise'
+        - type: object
+          required:
+            - comptes
+          properties:
+            comptes:
+              type: array
+              description: Liste des comptes bancaires de l'entreprise
+              items:
+                $ref: '#/components/schemas/CompteBancaire'
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+        - timestamp
+      properties:
+        code:
+          type: string
+          description: Code d'erreur unique
+          enum:
+            - VALIDATION_ERROR
+            - INVALID_INPUT
+            - ENTREPRISE_NOT_FOUND
+            - COMPTE_NOT_FOUND
+            - SIRET_ALREADY_EXISTS
+            - NUMERO_COMPTE_ALREADY_EXISTS
+            - CANNOT_DELETE_ENTREPRISE_WITH_COMPTES
+            - ENTREPRISE_REFERENCE_INVALID
+            - DATABASE_ERROR
+            - INTERNAL_ERROR
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Message d'erreur lisible
+          example: "Erreur de validation des données"
+        details:
+          description: Détails supplémentaires sur l'erreur
+        timestamp:
+          type: string
+          format: date-time
+          description: Date et heure de l'erreur
+          example: "2026-01-12T10:30:00Z"
+
+  responses:
+    ValidationError:
+      description: Erreur de validation des données
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: VALIDATION_ERROR
+            message: Erreur de validation des données
+            details:
+              - field: siret
+                message: Le SIRET doit contenir 14 chiffres
+            timestamp: "2026-01-12T10:30:00Z"
+
+    NotFoundError:
+      description: Ressource non trouvée
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            entreprise:
+              value:
+                code: ENTREPRISE_NOT_FOUND
+                message: Entreprise avec l'ID 123 introuvable
+                timestamp: "2026-01-12T10:30:00Z"
+            compte:
+              value:
+                code: COMPTE_NOT_FOUND
+                message: Compte bancaire avec l'ID 456 introuvable
+                timestamp: "2026-01-12T10:30:00Z"
+
+    ConflictError:
+      description: Conflit avec une ressource existante
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            siret:
+              value:
+                code: SIRET_ALREADY_EXISTS
+                message: Une entreprise avec le SIRET 12345678901234 existe déjà
+                timestamp: "2026-01-12T10:30:00Z"
+            compte:
+              value:
+                code: NUMERO_COMPTE_ALREADY_EXISTS
+                message: Un compte avec le numéro FR7612345678901234567890123 existe déjà
+                timestamp: "2026-01-12T10:30:00Z"
+
+    InternalError:
+      description: Erreur interne du serveur
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: INTERNAL_ERROR
+            message: Erreur interne du serveur
+            timestamp: "2026-01-12T10:30:00Z"
