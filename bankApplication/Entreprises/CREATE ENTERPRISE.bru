@@ -1,0 +1,19 @@
+meta {
+  name: CREATE ENTERPRISE
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:3000/api/entreprise
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "nom": "Tech Solutions SARL",
+    "siret": "12345678901234",
+    "adresse": "123 rue de la République, 75001 Paris"
+  }
+}

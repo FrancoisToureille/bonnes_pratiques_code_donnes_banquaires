@@ -59,7 +59,7 @@ API REST complète pour la gestion des entreprises et comptes bancaires avec doc
 | `DATABASE_ERROR` | 500 | Erreur base de données |
 | `INTERNAL_ERROR` | 500 | Erreur interne |
 
-## 🗂️ Structure du projet
+## Structure du projet
 
 ```
 ├── src/
