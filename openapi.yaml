@@ -18,7 +18,7 @@ tags:
     description: Gestion des comptes bancaires
 
 paths:
-  /entreprises:
+  /entreprise:
     get:
       tags:
         - Entreprises
@@ -61,7 +61,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /entreprises/{id}:
+  /entreprise/{id}:
     get:
       tags:
         - Entreprises
@@ -135,27 +135,29 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /entreprises/{id}/avec-comptes:
+  /bankAccount/{id}/bankAccounts:
     get:
       tags:
-        - Entreprises
-      summary: Récupère une entreprise avec ses comptes bancaires (agrégat)
-      operationId: getEntrepriseWithComptes
+        - Comptes Bancaires
+      summary: Récupère la liste des comptes bancaires pour une entreprise
+      operationId: getBankAccountsForEntreprise
       parameters:
         - $ref: '#/components/parameters/IdParam'
       responses:
         '200':
-          description: Entreprise avec ses comptes bancaires
+          description: Liste des comptes bancaires de l'entreprise
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EntrepriseAvecComptes'
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompteBancaire'
         '404':
           $ref: '#/components/responses/NotFoundError'
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /comptes:
+  /bankAccount:
     get:
       tags:
         - Comptes Bancaires
@@ -205,7 +207,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /comptes/{id}:
+  /bankAccount/{id}:
     get:
       tags:
         - Comptes Bancaires
