@@ -3,18 +3,15 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yaml';
 import fs from 'fs';
 import path from 'path';
-import { initializeDatabase } from './database/connection';
-import { errorHandler } from './middleware/validation';
 import { CompteBancaireController } from './adapters/driving/compteBancaireController';
 import { EntrepriseController } from './adapters/driving/entrepriseController';
 import { CompteBancaireService } from './services/compteBancaire.service';
 import { EntrepriseService } from './services/entreprise.service';
-
+import { InMemoryEntrepriseRepo } from './adapters/driven/inMemoryEntrepriseRepo';
+import { InMemoryCompteBancaireRepo } from './adapters/driven/inMemoryCompteBancaireRepo';
+import { errorHandler } from './middleware/validation';
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Initialize database
-initializeDatabase();
 
 // Middleware
 app.use(express.json());
@@ -27,16 +24,19 @@ const openApiSpec = YAML.parse(openApiContent);
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
+const entrepriseRepo = new InMemoryEntrepriseRepo();
+const compteBancaireRepo = new InMemoryCompteBancaireRepo();
+
 // Instantiate services then controllers (instance-based)
-const entrepriseService = new EntrepriseService();
-const compteBancaireService = new CompteBancaireService(entrepriseService);
+const entrepriseService = new EntrepriseService(entrepriseRepo);
+const compteBancaireService = new CompteBancaireService(compteBancaireRepo);
 
 const compteBancaireController = new CompteBancaireController(
   compteBancaireService
 );
-compteBancaireController.registerRoutes(app);
 
 const entrepriseController = new EntrepriseController(entrepriseService);
+compteBancaireController.registerRoutes(app);
 entrepriseController.registerRoutes(app);
 
 // Health check

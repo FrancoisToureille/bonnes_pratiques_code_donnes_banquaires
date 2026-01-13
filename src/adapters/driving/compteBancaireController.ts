@@ -1,111 +1,53 @@
-import { Application, Router, Request, Response, NextFunction } from 'express';
+import { Express, Request, Response } from 'express';
 import { CompteBancaireService } from '../../services/compteBancaire.service';
-import {
-  CompteBancaireCreateSchema,
-  CompteBancaireUpdateSchema,
-} from '../../entities/types';
-import { Errors } from '../../entities/errors';
 
 export class CompteBancaireController {
-  constructor(private service: CompteBancaireService) {}
+  constructor(private readonly service: CompteBancaireService) {}
 
-  registerRoutes(app: Application) {
-    const router = Router();
-
-    router.get('/', (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const entrepriseId = req.query.entrepriseId
-          ? parseInt(req.query.entrepriseId as string, 10)
-          : undefined;
-        if (entrepriseId !== undefined && isNaN(entrepriseId)) {
-          throw Errors.INVALID_INPUT([
-            {
-              field: 'entrepriseId',
-              message: "L'ID d'entreprise doit être un nombre entier",
-            },
-          ]);
-        }
-        const comptes = this.service.getAll(entrepriseId);
-        res.json(comptes);
-      } catch (error) {
-        next(error);
-      }
-    });
-
-    router.post('/', (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const data = CompteBancaireCreateSchema.parse(req.body);
-        const compte = this.service.create(data);
-        res.status(201).json(compte);
-      } catch (error) {
-        next(error);
-      }
-    });
-
-    router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-          throw Errors.INVALID_INPUT([
-            { field: 'id', message: "L'ID doit être un nombre entier" },
-          ]);
-        }
-        const compte = this.service.getById(id);
-        res.json(compte);
-      } catch (error) {
-        next(error);
-      }
-    });
-
-    router.put('/:id', (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-          throw Errors.INVALID_INPUT([
-            { field: 'id', message: "L'ID doit être un nombre entier" },
-          ]);
-        }
-        const data = CompteBancaireUpdateSchema.parse(req.body);
-        const compte = this.service.update(id, data);
-        res.json(compte);
-      } catch (error) {
-        next(error);
-      }
-    });
-
-    router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-          throw Errors.INVALID_INPUT([
-            { field: 'id', message: "L'ID doit être un nombre entier" },
-          ]);
-        }
-        this.service.delete(id);
-        res.status(204).send();
-      } catch (error) {
-        next(error);
-      }
-    });
-
-    router.get(
-      '/:id/bankAccounts',
-      (req: Request, res: Response, next: NextFunction) => {
-        try {
-          const id = parseInt(req.params.id, 10);
-          if (isNaN(id)) {
-            throw Errors.INVALID_INPUT([
-              { field: 'id', message: "L'ID doit être un nombre entier" },
-            ]);
-          }
-          const comptes = this.service.getForEntreprise(id);
-          res.json(comptes);
-        } catch (error) {
-          next(error);
-        }
-      }
+  registerRoutes(app: Express) {
+    app.get('/api/bankAccount', this.listComptes.bind(this));
+    app.post('/api/bankAccount', this.createCompte.bind(this));
+    app.get('/api/bankAccount/:id', this.getCompte.bind(this));
+    app.put('/api/bankAccount/:id', this.updateCompte.bind(this));
+    app.delete('/api/bankAccount/:id', this.deleteCompte.bind(this));
+    app.get(
+      '/api/bankAccount/:id/bankAccounts',
+      this.getComptesForEntreprise.bind(this)
     );
+  }
 
-    app.use('/api/bankAccount', router);
+  async listComptes(req: Request, res: Response) {
+    const list = await this.service.listComptesBancaires();
+    res.json(list);
+  }
+
+  async createCompte(req: Request, res: Response) {
+    const created = await this.service.createCompteBancaire(req.body);
+    res.status(201).json(created);
+  }
+
+  async getCompte(req: Request, res: Response) {
+    const id = req.params.id;
+    const found = await this.service.getCompteBancaire(id);
+    if (!found) return res.status(404).json({ message: 'Not found' });
+    res.json(found);
+  }
+
+  async updateCompte(req: Request, res: Response) {
+    const id = req.params.id;
+    const updated = await this.service.updateCompteBancaire(id, req.body);
+    res.json(updated);
+  }
+
+  async deleteCompte(req: Request, res: Response) {
+    const id = req.params.id;
+    await this.service.deleteCompteBancaire(id);
+    res.status(204).send();
+  }
+
+  async getComptesForEntreprise(req: Request, res: Response) {
+    const id = req.params.id;
+    const comptes = await this.service.getCompteBancaireByEntrepriseId(id);
+    res.json(comptes);
   }
 }

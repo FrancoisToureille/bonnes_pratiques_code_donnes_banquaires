@@ -1,27 +1,41 @@
-import { db } from '../database/connection';
-import {
-  Entreprise,
-  EntrepriseCreate,
-  EntrepriseUpdate,
-  CompteBancaire,
-} from '../entities/types';
-import { Errors } from '../entities/errors';
+import { Entreprise } from '../domain/entreprise';
+import { EntrepriseRepositoryPort } from '../ports/driven/repoPort';
+import { EntreprisePort } from '../ports/driving/EntreprisePort';
+export class EntrepriseService implements EntreprisePort {
+  constructor(private repo: EntrepriseRepositoryPort) {}
 
-export class EntrepriseService {
-  getAll(): Entreprise[] {
-    try {
-      const stmt = db.prepare(`
-        SELECT id, nom, siret, adresse, dateCreation 
-        FROM entreprises 
-        ORDER BY id
-      `);
-      return stmt.all() as Entreprise[];
-    } catch (error) {
-      throw Errors.DATABASE_ERROR(
-        'Erreur lors de la récupération des entreprises'
-      );
+  async listEntreprises(): Promise<Entreprise[]> {
+    return this.repo.findAll();
+  }
+  async getEntreprise(id: string): Promise<Entreprise | null> {
+    return this.repo.findById(id);
+  }
+  async createEntreprise(input: Omit<Entreprise, 'id'>): Promise<Entreprise> {
+    // Business rules could be applied here
+    return this.repo.save(input);
+  }
+  async updateEntreprise(
+    id: string,
+    data: Partial<Omit<Entreprise, 'id'>>
+  ): Promise<Entreprise> {
+    const existingEntreprise = await this.repo.findById(id);
+    if (!existingEntreprise) {
+      throw new Error('Entreprise introuvable');
+    } else {
+      return this.repo.update(id, existingEntreprise);
     }
   }
+
+  async deleteEntreprise(id: string): Promise<void> {
+    const existingEntreprise = await this.repo.findById(id);
+    if (!existingEntreprise) {
+      throw new Error('Entreprise introuvable');
+    } else {
+      return this.repo.delete(id);
+    }
+  }
+
+  /*
 
   getById(id: number): Entreprise {
     try {
@@ -184,5 +198,5 @@ export class EntrepriseService {
         "Erreur lors de la récupération de l'entreprise avec ses comptes"
       );
     }
-  }
+  }*/
 }

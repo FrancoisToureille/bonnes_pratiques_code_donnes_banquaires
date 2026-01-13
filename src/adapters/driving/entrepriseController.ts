@@ -1,82 +1,59 @@
-import { Application, Router, Request, Response, NextFunction } from 'express';
+import { Express, Request, Response } from 'express';
 import { EntrepriseService } from '../../services/entreprise.service';
-import {
-  EntrepriseCreateSchema,
-  EntrepriseUpdateSchema,
-} from '../../entities/types';
-import { Errors } from '../../entities/errors';
 
 export class EntrepriseController {
-  constructor(private service: EntrepriseService) {}
+  constructor(private readonly service: EntrepriseService) {}
 
-  registerRoutes(app: Application) {
-    const router = Router();
+  registerRoutes(app: Express) {
+    app.get('/api/entreprise', this.listEntreprises.bind(this));
+    app.post('/api/entreprise', this.createEntreprise.bind(this));
+    app.get('/api/entreprise/:id', this.getEntreprise.bind(this));
+    app.put('/api/entreprise/:id', this.updateEntreprise.bind(this));
+    app.delete('/api/entreprise/:id', this.deleteEntreprise.bind(this));
+    app.get('/api/entreprise/:id/withComptes', this.getEntrepriseWithComptes.bind(this));
+  }
 
-    router.get('/', (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const entreprises = this.service.getAll();
-        res.json(entreprises);
-      } catch (error) {
-        next(error);
-      }
-    });
+  async listEntreprises(req: Request, res: Response) {
+    const list = await this.service.listEntreprises();
+    res.json(list);
+  }
 
-    router.post('/', (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const data = EntrepriseCreateSchema.parse(req.body);
-        const entreprise = this.service.create(data);
-        res.status(201).json(entreprise);
-      } catch (error) {
-        next(error);
-      }
-    });
+  async createEntreprise(req: Request, res: Response) {
+    const created = await this.service.createEntreprise(req.body);
+    res.status(201).json(created);
+  }
 
-    router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-          throw Errors.INVALID_INPUT([
-            { field: 'id', message: "L'ID doit être un nombre entier" },
-          ]);
-        }
-        const entreprise = this.service.getById(id);
-        res.json(entreprise);
-      } catch (error) {
-        next(error);
-      }
-    });
+  async getEntreprise(req: Request, res: Response) {
+    const id = req.params.id;
+    const found = await this.service.getEntreprise(id);
+    if (!found) return res.status(404).json({ message: 'Not found' });
+    res.json(found);
+  }
 
-    router.put('/:id', (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-          throw Errors.INVALID_INPUT([
-            { field: 'id', message: "L'ID doit être un nombre entier" },
-          ]);
-        }
-        const data = EntrepriseUpdateSchema.parse(req.body);
-        const entreprise = this.service.update(id, data);
-        res.json(entreprise);
-      } catch (error) {
-        next(error);
-      }
-    });
+  async updateEntreprise(req: Request, res: Response) {
+    const id = req.params.id;
+    const updated = await this.service.updateEntreprise(id, req.body);
+    res.json(updated);
+  }
 
-    router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-          throw Errors.INVALID_INPUT([
-            { field: 'id', message: "L'ID doit être un nombre entier" },
-          ]);
-        }
-        this.service.delete(id);
-        res.status(204).send();
-      } catch (error) {
-        next(error);
-      }
-    });
+  async deleteEntreprise(req: Request, res: Response) {
+    const id = req.params.id;
+    await this.service.deleteEntreprise(id);
+    res.status(204).send();
+  }
 
-    app.use('/api/entreprise', router);
+  async getEntrepriseWithComptes(req: Request, res: Response) {
+    const id = req.params.id;
+    // Optionally delegate to service method if available
+    // @ts-ignore
+    if (typeof this.service.getWithComptes === 'function') {
+      // @ts-ignore
+      const result = await this.service.getWithComptes(id);
+      res.json(result);
+      return;
+    }
+    const found = await this.service.getEntreprise(id);
+    if (!found) return res.status(404).json({ message: 'Not found' });
+    res.json(found);
   }
 }
