@@ -1,10 +1,16 @@
 import { db } from '../database/connection';
-import { CompteBancaire, CompteBancaireCreate, CompteBancaireUpdate } from '../entities/types';
+import {
+  CompteBancaire,
+  CompteBancaireCreate,
+  CompteBancaireUpdate,
+} from '../entities/types';
 import { Errors } from '../entities/errors';
 import { EntrepriseService } from './entreprise.service';
 
 export class CompteBancaireService {
-  static getAll(entrepriseId?: number): CompteBancaire[] {
+  constructor(private entrepriseService: EntrepriseService) {}
+
+  getAll(entrepriseId?: number): CompteBancaire[] {
     try {
       let query = `
         SELECT id, numeroCompte, solde, devise, type, entrepriseId, dateOuverture 
@@ -21,11 +27,13 @@ export class CompteBancaireService {
       const stmt = db.prepare(query);
       return stmt.all(...params) as CompteBancaire[];
     } catch (error) {
-      throw Errors.DATABASE_ERROR('Erreur lors de la récupération des comptes bancaires');
+      throw Errors.DATABASE_ERROR(
+        'Erreur lors de la récupération des comptes bancaires'
+      );
     }
   }
 
-  static getById(id: number): CompteBancaire {
+  getById(id: number): CompteBancaire {
     try {
       const stmt = db.prepare(`
         SELECT id, numeroCompte, solde, devise, type, entrepriseId, dateOuverture 
@@ -33,24 +41,26 @@ export class CompteBancaireService {
         WHERE id = ?
       `);
       const compte = stmt.get(id) as CompteBancaire | undefined;
-      
+
       if (!compte) {
         throw Errors.COMPTE_NOT_FOUND(id);
       }
-      
+
       return compte;
     } catch (error) {
       if (error instanceof Error && error.message.includes('introuvable')) {
         throw error;
       }
-      throw Errors.DATABASE_ERROR('Erreur lors de la récupération du compte bancaire');
+      throw Errors.DATABASE_ERROR(
+        'Erreur lors de la récupération du compte bancaire'
+      );
     }
   }
 
-  static getForEntreprise(entrepriseId: number): CompteBancaire[] {
+  getForEntreprise(entrepriseId: number): CompteBancaire[] {
     try {
       // Verify entreprise exists
-      EntrepriseService.getById(entrepriseId);
+      this.entrepriseService.getById(entrepriseId);
 
       const stmt = db.prepare(`
         SELECT id, numeroCompte, solde, devise, type, entrepriseId, dateOuverture 
@@ -58,23 +68,27 @@ export class CompteBancaireService {
         WHERE entrepriseId = ? 
         ORDER BY id
       `);
-      
+
       return stmt.all(entrepriseId) as CompteBancaire[];
     } catch (error) {
       if (error instanceof Error && error.message.includes('introuvable')) {
         throw error;
       }
-      throw Errors.DATABASE_ERROR('Erreur lors de la récupération des comptes de l\'entreprise');
+      throw Errors.DATABASE_ERROR(
+        "Erreur lors de la récupération des comptes de l'entreprise"
+      );
     }
   }
 
-  static create(data: CompteBancaireCreate): CompteBancaire {
+  create(data: CompteBancaireCreate): CompteBancaire {
     try {
       // Verify entreprise exists
-      EntrepriseService.getById(data.entrepriseId);
+      this.entrepriseService.getById(data.entrepriseId);
 
       // Check if numero compte already exists
-      const existing = db.prepare('SELECT id FROM comptes_bancaires WHERE numeroCompte = ?').get(data.numeroCompte);
+      const existing = db
+        .prepare('SELECT id FROM comptes_bancaires WHERE numeroCompte = ?')
+        .get(data.numeroCompte);
       if (existing) {
         throw Errors.NUMERO_COMPTE_ALREADY_EXISTS(data.numeroCompte);
       }
@@ -83,7 +97,7 @@ export class CompteBancaireService {
         INSERT INTO comptes_bancaires (numeroCompte, solde, devise, type, entrepriseId, dateOuverture)
         VALUES (?, ?, ?, ?, ?, datetime('now'))
       `);
-      
+
       const result = stmt.run(
         data.numeroCompte,
         data.solde,
@@ -91,24 +105,35 @@ export class CompteBancaireService {
         data.type,
         data.entrepriseId
       );
-      
+
       return this.getById(result.lastInsertRowid as number);
     } catch (error) {
-      if (error instanceof Error && (error.message.includes('existe déjà') || error.message.includes('introuvable') || error.message.includes('invalide'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('existe déjà') ||
+          error.message.includes('introuvable') ||
+          error.message.includes('invalide'))
+      ) {
         throw error;
       }
-      throw Errors.DATABASE_ERROR('Erreur lors de la création du compte bancaire');
+      throw Errors.DATABASE_ERROR(
+        'Erreur lors de la création du compte bancaire'
+      );
     }
   }
 
-  static update(id: number, data: CompteBancaireUpdate): CompteBancaire {
+  update(id: number, data: CompteBancaireUpdate): CompteBancaire {
     try {
       // Verify compte exists
       this.getById(id);
 
       // Check if new numero compte is not already used by another compte
       if (data.numeroCompte !== undefined) {
-        const existing = db.prepare('SELECT id FROM comptes_bancaires WHERE numeroCompte = ? AND id != ?').get(data.numeroCompte, id);
+        const existing = db
+          .prepare(
+            'SELECT id FROM comptes_bancaires WHERE numeroCompte = ? AND id != ?'
+          )
+          .get(data.numeroCompte, id);
         if (existing) {
           throw Errors.NUMERO_COMPTE_ALREADY_EXISTS(data.numeroCompte);
         }
@@ -139,19 +164,27 @@ export class CompteBancaireService {
       }
 
       values.push(id);
-      const stmt = db.prepare(`UPDATE comptes_bancaires SET ${updates.join(', ')} WHERE id = ?`);
+      const stmt = db.prepare(
+        `UPDATE comptes_bancaires SET ${updates.join(', ')} WHERE id = ?`
+      );
       stmt.run(...values);
 
       return this.getById(id);
     } catch (error) {
-      if (error instanceof Error && (error.message.includes('introuvable') || error.message.includes('existe déjà'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('introuvable') ||
+          error.message.includes('existe déjà'))
+      ) {
         throw error;
       }
-      throw Errors.DATABASE_ERROR('Erreur lors de la mise à jour du compte bancaire');
+      throw Errors.DATABASE_ERROR(
+        'Erreur lors de la mise à jour du compte bancaire'
+      );
     }
   }
 
-  static delete(id: number): void {
+  delete(id: number): void {
     try {
       // Verify compte exists
       this.getById(id);
@@ -162,7 +195,9 @@ export class CompteBancaireService {
       if (error instanceof Error && error.message.includes('introuvable')) {
         throw error;
       }
-      throw Errors.DATABASE_ERROR('Erreur lors de la suppression du compte bancaire');
+      throw Errors.DATABASE_ERROR(
+        'Erreur lors de la suppression du compte bancaire'
+      );
     }
   }
 }

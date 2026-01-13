@@ -7,7 +7,7 @@ import {
 import { Errors } from '../../entities/errors';
 
 export class CompteBancaireController {
-  constructor(private service = CompteBancaireService) {}
+  constructor(private service: CompteBancaireService) {}
 
   registerRoutes(app: Application) {
     const router = Router();

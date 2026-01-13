@@ -1,9 +1,14 @@
 import { db } from '../database/connection';
-import { Entreprise, EntrepriseCreate, EntrepriseUpdate, CompteBancaire } from '../entities/types';
+import {
+  Entreprise,
+  EntrepriseCreate,
+  EntrepriseUpdate,
+  CompteBancaire,
+} from '../entities/types';
 import { Errors } from '../entities/errors';
 
 export class EntrepriseService {
-  static getAll(): Entreprise[] {
+  getAll(): Entreprise[] {
     try {
       const stmt = db.prepare(`
         SELECT id, nom, siret, adresse, dateCreation 
@@ -12,11 +17,13 @@ export class EntrepriseService {
       `);
       return stmt.all() as Entreprise[];
     } catch (error) {
-      throw Errors.DATABASE_ERROR('Erreur lors de la récupération des entreprises');
+      throw Errors.DATABASE_ERROR(
+        'Erreur lors de la récupération des entreprises'
+      );
     }
   }
 
-  static getById(id: number): Entreprise {
+  getById(id: number): Entreprise {
     try {
       const stmt = db.prepare(`
         SELECT id, nom, siret, adresse, dateCreation 
@@ -24,24 +31,27 @@ export class EntrepriseService {
         WHERE id = ?
       `);
       const entreprise = stmt.get(id) as Entreprise | undefined;
-      
+
       if (!entreprise) {
         throw Errors.ENTREPRISE_NOT_FOUND(id);
       }
-      
+
       return entreprise;
     } catch (error) {
       if (error instanceof Error && error.message.includes('introuvable')) {
         throw error;
       }
-      throw Errors.DATABASE_ERROR('Erreur lors de la récupération de l\'entreprise');
+      throw Errors.DATABASE_ERROR(
+        "Erreur lors de la récupération de l'entreprise"
+      );
     }
   }
 
-  static create(data: EntrepriseCreate): Entreprise {
+  create(data: EntrepriseCreate): Entreprise {
     try {
-      // Check if SIRET already exists
-      const existing = db.prepare('SELECT id FROM entreprises WHERE siret = ?').get(data.siret);
+      const existing = db
+        .prepare('SELECT id FROM entreprises WHERE siret = ?')
+        .get(data.siret);
       if (existing) {
         throw Errors.SIRET_ALREADY_EXISTS(data.siret);
       }
@@ -50,26 +60,30 @@ export class EntrepriseService {
         INSERT INTO entreprises (nom, siret, adresse, dateCreation)
         VALUES (?, ?, ?, datetime('now'))
       `);
-      
+
       const result = stmt.run(data.nom, data.siret, data.adresse);
-      
+
       return this.getById(result.lastInsertRowid as number);
     } catch (error) {
-      if (error instanceof Error && (error.message.includes('existe déjà') || error.message.includes('SIRET'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('existe déjà') ||
+          error.message.includes('SIRET'))
+      ) {
         throw error;
       }
-      throw Errors.DATABASE_ERROR('Erreur lors de la création de l\'entreprise');
+      throw Errors.DATABASE_ERROR("Erreur lors de la création de l'entreprise");
     }
   }
 
-  static update(id: number, data: EntrepriseUpdate): Entreprise {
+  update(id: number, data: EntrepriseUpdate): Entreprise {
     try {
-      // Verify entreprise exists
       this.getById(id);
 
-      // Check if new SIRET is not already used by another entreprise
       if (data.siret) {
-        const existing = db.prepare('SELECT id FROM entreprises WHERE siret = ? AND id != ?').get(data.siret, id);
+        const existing = db
+          .prepare('SELECT id FROM entreprises WHERE siret = ? AND id != ?')
+          .get(data.siret, id);
         if (existing) {
           throw Errors.SIRET_ALREADY_EXISTS(data.siret);
         }
@@ -96,26 +110,36 @@ export class EntrepriseService {
       }
 
       values.push(id);
-      const stmt = db.prepare(`UPDATE entreprises SET ${updates.join(', ')} WHERE id = ?`);
+      const stmt = db.prepare(
+        `UPDATE entreprises SET ${updates.join(', ')} WHERE id = ?`
+      );
       stmt.run(...values);
 
       return this.getById(id);
     } catch (error) {
-      if (error instanceof Error && (error.message.includes('introuvable') || error.message.includes('existe déjà'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('introuvable') ||
+          error.message.includes('existe déjà'))
+      ) {
         throw error;
       }
-      throw Errors.DATABASE_ERROR('Erreur lors de la mise à jour de l\'entreprise');
+      throw Errors.DATABASE_ERROR(
+        "Erreur lors de la mise à jour de l'entreprise"
+      );
     }
   }
 
-  static delete(id: number): void {
+  delete(id: number): void {
     try {
-      // Verify entreprise exists
       this.getById(id);
 
-      // Check if entreprise has comptes
-      const hasComptes = db.prepare('SELECT COUNT(*) as count FROM comptes_bancaires WHERE entrepriseId = ?').get(id) as { count: number };
-      
+      const hasComptes = db
+        .prepare(
+          'SELECT COUNT(*) as count FROM comptes_bancaires WHERE entrepriseId = ?'
+        )
+        .get(id) as { count: number };
+
       if (hasComptes.count > 0) {
         throw Errors.CANNOT_DELETE_ENTREPRISE_WITH_COMPTES();
       }
@@ -123,17 +147,23 @@ export class EntrepriseService {
       const stmt = db.prepare('DELETE FROM entreprises WHERE id = ?');
       stmt.run(id);
     } catch (error) {
-      if (error instanceof Error && (error.message.includes('introuvable') || error.message.includes('Impossible de supprimer'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('introuvable') ||
+          error.message.includes('Impossible de supprimer'))
+      ) {
         throw error;
       }
-      throw Errors.DATABASE_ERROR('Erreur lors de la suppression de l\'entreprise');
+      throw Errors.DATABASE_ERROR(
+        "Erreur lors de la suppression de l'entreprise"
+      );
     }
   }
 
-  static getWithComptes(id: number) {
+  getWithComptes(id: number) {
     try {
       const entreprise = this.getById(id);
-      
+
       const stmt = db.prepare(`
         SELECT id, numeroCompte, solde, devise, type, entrepriseId, dateOuverture 
         FROM comptes_bancaires 
@@ -150,7 +180,9 @@ export class EntrepriseService {
       if (error instanceof Error && error.message.includes('introuvable')) {
         throw error;
       }
-      throw Errors.DATABASE_ERROR('Erreur lors de la récupération de l\'entreprise avec ses comptes');
+      throw Errors.DATABASE_ERROR(
+        "Erreur lors de la récupération de l'entreprise avec ses comptes"
+      );
     }
   }
 }

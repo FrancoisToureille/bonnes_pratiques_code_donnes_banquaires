@@ -27,13 +27,16 @@ const openApiSpec = YAML.parse(openApiContent);
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
-// Routes via controllers
+// Instantiate services then controllers (instance-based)
+const entrepriseService = new EntrepriseService();
+const compteBancaireService = new CompteBancaireService(entrepriseService);
+
 const compteBancaireController = new CompteBancaireController(
-  CompteBancaireService
+  compteBancaireService
 );
 compteBancaireController.registerRoutes(app);
 
-const entrepriseController = new EntrepriseController(EntrepriseService);
+const entrepriseController = new EntrepriseController(entrepriseService);
 entrepriseController.registerRoutes(app);
 
 // Health check
