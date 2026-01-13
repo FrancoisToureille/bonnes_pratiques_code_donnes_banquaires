@@ -5,8 +5,10 @@ import fs from 'fs';
 import path from 'path';
 import { initializeDatabase } from './database/connection';
 import { errorHandler } from './middleware/validation';
-import entrepriseRoutes from './routes/entreprise.routes';
-import compteBancaireRoutes from './routes/compteBancaire.routes';
+import { CompteBancaireController } from './adapters/driving/compteBancaireController';
+import { EntrepriseController } from './adapters/driving/entrepriseController';
+import { CompteBancaireService } from './services/compteBancaire.service';
+import { EntrepriseService } from './services/entreprise.service';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,9 +27,14 @@ const openApiSpec = YAML.parse(openApiContent);
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
-// Routes
-app.use('/api/entreprise', entrepriseRoutes);
-app.use('/api/bankAccount', compteBancaireRoutes);
+// Routes via controllers
+const compteBancaireController = new CompteBancaireController(
+  CompteBancaireService
+);
+compteBancaireController.registerRoutes(app);
+
+const entrepriseController = new EntrepriseController(EntrepriseService);
+entrepriseController.registerRoutes(app);
 
 // Health check
 app.get('/health', (req, res) => {
