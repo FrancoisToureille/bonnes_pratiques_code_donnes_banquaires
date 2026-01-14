@@ -5,7 +5,7 @@ import { CompteBancairePort } from '../ports/driving/compteBancairePort';
 export class CompteBancaireService implements CompteBancairePort {
   constructor(private repo: CompteBancaireRepositoryPort) {}
 
-  async v(): Promise<CompteBancaire[]> {
+  async listComptesBancaires(): Promise<CompteBancaire[]> {
     return this.repo.findAll();
   }
   async getCompteBancaire(id: string): Promise<CompteBancaire | null> {

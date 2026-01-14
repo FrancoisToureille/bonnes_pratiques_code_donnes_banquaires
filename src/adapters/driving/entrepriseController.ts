@@ -10,7 +10,10 @@ export class EntrepriseController {
     app.get('/api/entreprise/:id', this.getEntreprise.bind(this));
     app.put('/api/entreprise/:id', this.updateEntreprise.bind(this));
     app.delete('/api/entreprise/:id', this.deleteEntreprise.bind(this));
-    app.get('/api/entreprise/:id/withComptes', this.getEntrepriseWithComptes.bind(this));
+    app.get(
+      '/api/entreprise/:id/withComptes',
+      this.getEntrepriseWithComptes.bind(this)
+    );
   }
 
   async listEntreprises(req: Request, res: Response) {
@@ -26,7 +29,10 @@ export class EntrepriseController {
   async getEntreprise(req: Request, res: Response) {
     const id = req.params.id;
     const found = await this.service.getEntreprise(id);
-    if (!found) return res.status(404).json({ message: 'Not found' });
+    if (!found) {
+      res.status(404).send('Entreprise non trouvée');
+      return;
+    }
     res.json(found);
   }
 

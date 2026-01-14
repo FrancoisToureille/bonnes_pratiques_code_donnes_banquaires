@@ -1,6 +1,6 @@
 import { Entreprise } from '../domain/entreprise';
 import { EntrepriseRepositoryPort } from '../ports/driven/repoPort';
-import { EntreprisePort } from '../ports/driving/EntreprisePort';
+import { EntreprisePort } from '../ports/driving/entreprisePort';
 export class EntrepriseService implements EntreprisePort {
   constructor(private repo: EntrepriseRepositoryPort) {}
 

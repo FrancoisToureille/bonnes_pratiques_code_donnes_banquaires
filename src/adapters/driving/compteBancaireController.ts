@@ -29,7 +29,10 @@ export class CompteBancaireController {
   async getCompte(req: Request, res: Response) {
     const id = req.params.id;
     const found = await this.service.getCompteBancaire(id);
-    if (!found) return res.status(404).json({ message: 'Not found' });
+    if (!found) {
+      res.status(404).send('Compte bancaire non trouvé');
+      return;
+    }
     res.json(found);
   }
 
