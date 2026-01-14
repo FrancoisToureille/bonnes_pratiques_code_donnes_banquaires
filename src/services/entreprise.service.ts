@@ -16,13 +16,13 @@ export class EntrepriseService implements EntreprisePort {
   }
   async updateEntreprise(
     id: string,
-    data: Partial<Omit<Entreprise, 'id'>>
+    data: Entreprise
   ): Promise<Entreprise> {
     const existingEntreprise = await this.repo.findById(id);
     if (!existingEntreprise) {
       throw new Error('Entreprise introuvable');
     } else {
-      return this.repo.update(id, existingEntreprise);
+      return this.repo.update(id, data);
     }
   }
 

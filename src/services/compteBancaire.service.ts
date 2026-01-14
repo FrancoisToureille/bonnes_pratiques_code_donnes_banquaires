@@ -19,12 +19,12 @@ export class CompteBancaireService implements CompteBancairePort {
     return this.repo.findByEntrepriseId(entrepriseId);
   }
   
-  async updateCompteBancaire(id: string, data: Partial<Omit<CompteBancaire, 'id'>>): Promise<CompteBancaire> {
+  async updateCompteBancaire(id: string, data: CompteBancaire): Promise<CompteBancaire> {
     const existingCompte = await this.repo.findById(id);
     if (!existingCompte) {
       throw new Error('Compte bancaire introuvable');
     } else {
-      return this.repo.update(id, existingCompte);
+      return this.repo.update(id, data);
     }
   }
 

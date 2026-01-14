@@ -129,7 +129,7 @@ paths:
               example:
                 code: CANNOT_DELETE_ENTREPRISE_WITH_COMPTES
                 message: Impossible de supprimer l'entreprise car elle possède des comptes bancaires
-                timestamp: "2026-01-12T10:30:00Z"
+                timestamp: '2026-01-12T10:30:00Z'
         '404':
           $ref: '#/components/responses/NotFoundError'
         '500':
@@ -279,7 +279,7 @@ components:
       description: Identifiant unique de la ressource
       required: true
       schema:
-        type: integer
+        type: string
         minimum: 1
 
   schemas:
@@ -293,7 +293,7 @@ components:
         - dateCreation
       properties:
         id:
-          type: integer
+          type: string
           description: Identifiant unique
           example: 1
         nom:
@@ -301,23 +301,23 @@ components:
           minLength: 1
           maxLength: 200
           description: Nom de l'entreprise
-          example: "Tech Solutions SARL"
+          example: 'Tech Solutions SARL'
         siret:
           type: string
           pattern: '^\d{14}$'
           description: Numéro SIRET (14 chiffres)
-          example: "12345678901234"
+          example: '12345678901234'
         adresse:
           type: string
           minLength: 1
           maxLength: 500
           description: Adresse complète
-          example: "123 rue de la République, 75001 Paris"
+          example: '123 rue de la République, 75001 Paris'
         dateCreation:
           type: string
           format: date-time
           description: Date de création dans le système
-          example: "2026-01-12T10:30:00Z"
+          example: '2026-01-12T10:30:00Z'
 
     EntrepriseCreate:
       type: object
@@ -330,16 +330,16 @@ components:
           type: string
           minLength: 1
           maxLength: 200
-          example: "Tech Solutions SARL"
+          example: 'Tech Solutions SARL'
         siret:
           type: string
           pattern: '^\d{14}$'
-          example: "12345678901234"
+          example: '12345678901234'
         adresse:
           type: string
           minLength: 1
           maxLength: 500
-          example: "123 rue de la République, 75001 Paris"
+          example: '123 rue de la République, 75001 Paris'
 
     EntrepriseUpdate:
       type: object
@@ -368,14 +368,14 @@ components:
         - dateOuverture
       properties:
         id:
-          type: integer
+          type: string
           description: Identifiant unique
           example: 1
         numeroCompte:
           type: string
           pattern: '^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$'
           description: Numéro de compte au format IBAN
-          example: "FR7612345678901234567890123"
+          example: 'FR7612345678901234567890123'
         solde:
           type: number
           format: double
@@ -385,12 +385,12 @@ components:
           type: string
           enum: [EUR, USD, GBP, CHF]
           description: Devise du compte
-          example: "EUR"
+          example: 'EUR'
         type:
           type: string
           enum: [COURANT, EPARGNE, PROFESSIONNEL]
           description: Type de compte
-          example: "PROFESSIONNEL"
+          example: 'PROFESSIONNEL'
         entrepriseId:
           type: integer
           description: ID de l'entreprise propriétaire
@@ -399,7 +399,7 @@ components:
           type: string
           format: date-time
           description: Date d'ouverture du compte
-          example: "2026-01-12T10:30:00Z"
+          example: '2026-01-12T10:30:00Z'
 
     CompteBancaireCreate:
       type: object
@@ -413,7 +413,7 @@ components:
         numeroCompte:
           type: string
           pattern: '^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$'
-          example: "FR7612345678901234567890123"
+          example: 'FR7612345678901234567890123'
         solde:
           type: number
           format: double
@@ -421,11 +421,11 @@ components:
         devise:
           type: string
           enum: [EUR, USD, GBP, CHF]
-          example: "EUR"
+          example: 'EUR'
         type:
           type: string
           enum: [COURANT, EPARGNE, PROFESSIONNEL]
-          example: "PROFESSIONNEL"
+          example: 'PROFESSIONNEL'
         entrepriseId:
           type: integer
           example: 1
@@ -480,18 +480,18 @@ components:
             - ENTREPRISE_REFERENCE_INVALID
             - DATABASE_ERROR
             - INTERNAL_ERROR
-          example: "VALIDATION_ERROR"
+          example: 'VALIDATION_ERROR'
         message:
           type: string
           description: Message d'erreur lisible
-          example: "Erreur de validation des données"
+          example: 'Erreur de validation des données'
         details:
           description: Détails supplémentaires sur l'erreur
         timestamp:
           type: string
           format: date-time
           description: Date et heure de l'erreur
-          example: "2026-01-12T10:30:00Z"
+          example: '2026-01-12T10:30:00Z'
 
   responses:
     ValidationError:
@@ -506,7 +506,7 @@ components:
             details:
               - field: siret
                 message: Le SIRET doit contenir 14 chiffres
-            timestamp: "2026-01-12T10:30:00Z"
+            timestamp: '2026-01-12T10:30:00Z'
 
     NotFoundError:
       description: Ressource non trouvée
@@ -519,12 +519,12 @@ components:
               value:
                 code: ENTREPRISE_NOT_FOUND
                 message: Entreprise avec l'ID 123 introuvable
-                timestamp: "2026-01-12T10:30:00Z"
+                timestamp: '2026-01-12T10:30:00Z'
             compte:
               value:
                 code: COMPTE_NOT_FOUND
                 message: Compte bancaire avec l'ID 456 introuvable
-                timestamp: "2026-01-12T10:30:00Z"
+                timestamp: '2026-01-12T10:30:00Z'
 
     ConflictError:
       description: Conflit avec une ressource existante
@@ -537,12 +537,12 @@ components:
               value:
                 code: SIRET_ALREADY_EXISTS
                 message: Une entreprise avec le SIRET 12345678901234 existe déjà
-                timestamp: "2026-01-12T10:30:00Z"
+                timestamp: '2026-01-12T10:30:00Z'
             compte:
               value:
                 code: NUMERO_COMPTE_ALREADY_EXISTS
                 message: Un compte avec le numéro FR7612345678901234567890123 existe déjà
-                timestamp: "2026-01-12T10:30:00Z"
+                timestamp: '2026-01-12T10:30:00Z'
 
     InternalError:
       description: Erreur interne du serveur
@@ -553,4 +553,4 @@ components:
           example:
             code: INTERNAL_ERROR
             message: Erreur interne du serveur
-            timestamp: "2026-01-12T10:30:00Z"
+            timestamp: '2026-01-12T10:30:00Z'

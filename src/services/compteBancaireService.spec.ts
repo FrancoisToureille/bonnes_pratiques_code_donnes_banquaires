@@ -75,29 +75,34 @@ describe('CompteBancaireService', () => {
       '1',
       '3'
     );
-    const updatedData: Partial<Omit<CompteBancaire, 'id'>> = {
-      solde: '654321',
-    };
-    const updatedCompte = new CompteBancaire(
-      updatedData.solde!,
-      existing.numeroCompte,
-      existing.devise,
-      existing.type,
-      existing.entrepriseId,
-      existing.id
+    const updatedData = new CompteBancaire(
+      '654321',
+      'IBAN456',
+      'BIC456',
+      '2',
+      '1',
+      '3'
     );
     mockRepo.findById.mockResolvedValue(existing);
-    mockRepo.update.mockResolvedValue(updatedCompte);
+    mockRepo.update.mockResolvedValue(updatedData);
     await expect(
       service.updateCompteBancaire('3', updatedData)
-    ).resolves.toEqual(updatedCompte);
+    ).resolves.toEqual(updatedData);
     expect(mockRepo.findById).toHaveBeenCalledWith('3');
-    expect(mockRepo.update).toHaveBeenCalledWith('3', existing);
+    expect(mockRepo.update).toHaveBeenCalledWith('3', updatedData);
   });
   it("updateCompteBancaire lance une erreur si le compte n'existe pas", async () => {
     mockRepo.findById.mockResolvedValue(null);
+    const updatedData = new CompteBancaire(
+      '654321',
+      'IBAN456',
+      'BIC456',
+      '2',
+      '1',
+      'missing'
+    );
     await expect(
-      service.updateCompteBancaire('missing', { solde: '654321' })
+      service.updateCompteBancaire('missing', updatedData)
     ).rejects.toThrow('Compte bancaire introuvable');
     expect(mockRepo.findById).toHaveBeenCalledWith('missing');
   });

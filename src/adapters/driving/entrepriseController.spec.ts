@@ -9,7 +9,7 @@ describe('EntrepriseController', () => {
     createEntreprise: jest.Mock<Promise<Entreprise>, [Omit<Entreprise, 'id'>]>;
     updateEntreprise: jest.Mock<
       Promise<Entreprise>,
-      [string, Partial<Omit<Entreprise, 'id'>>]
+      [string, Entreprise]
     >;
     deleteEntreprise: jest.Mock<Promise<void>, [string]>;
   };

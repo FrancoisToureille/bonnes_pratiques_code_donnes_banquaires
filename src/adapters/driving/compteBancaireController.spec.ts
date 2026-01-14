@@ -7,7 +7,7 @@ describe('CompteBancaireController', () => {
     listComptesBancaires: jest.Mock<Promise<CompteBancaire[]>, []>;
     getCompteBancaire: jest.Mock<Promise<CompteBancaire | null>, [string]>;
     createCompteBancaire: jest.Mock<Promise<CompteBancaire>, [Omit<CompteBancaire, 'id'>]>;
-    updateCompteBancaire: jest.Mock<Promise<CompteBancaire>, [string, Partial<Omit<CompteBancaire, 'id'>>]>;
+    updateCompteBancaire: jest.Mock<Promise<CompteBancaire>, [string, CompteBancaire]>;
     deleteCompteBancaire: jest.Mock<Promise<void>, [string]>;
   };
   let controller: CompteBancaireController;
